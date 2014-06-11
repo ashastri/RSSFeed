@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RSSFeed</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_template">Template</string>
+    
+	<string name="txtCredits"><a href="https://itunes.apple.com/us/app/clash-of-clane/id529479190?mt-8&amp;uo-2">Click Me</a></string>
+</resources>
