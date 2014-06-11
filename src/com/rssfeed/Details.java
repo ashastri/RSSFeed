@@ -1,16 +1,9 @@
 package com.rssfeed;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Html;
@@ -35,7 +28,7 @@ public class Details extends Activity {
 	TextView appArtist;
 	ImageView appIcon;
 	Button appPrice;
-	private static Feed obj;
+	private static Feed feed;
 	private static int position;
 	private static String favorites = null;
 	private static SharedPreferences sharedPreferences;
@@ -56,33 +49,27 @@ public class Details extends Activity {
 		appArtist = (TextView) findViewById(R.id.appArtist);
 
 		Intent i = getIntent();
-		obj = (Feed) i.getSerializableExtra("feedData");
+		feed = (Feed) i.getSerializableExtra("feedData");
 		position = i.getIntExtra("position", 0);
 
-		titleView.setText(obj.getEntry().get(position).getTitle().getLabel());
-		summary.setText(obj.getEntry().get(position).getSummary().getLabel());
-		Bitmap bitmap = null;
-		try {
-			bitmap = BitmapFactory.decodeStream((InputStream) new URL(obj
-					.getEntry().get(position).getImage().get(1).getLabel())
-					.getContent());
-		} catch (MalformedURLException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		appIcon.setImageBitmap(bitmap);
-		appPrice.setText(obj.getEntry().get(position).getPrice().getLabel());
-		appRights.setText(obj.getEntry().get(position).getRights().getLabel());
-		appReleaseDate.setText(obj.getEntry().get(position).getReleaseDate()
+		titleView.setText(feed.getEntry().get(position).getTitle().getLabel());
+		summary.setText(feed.getEntry().get(position).getSummary().getLabel());
+		appIcon.setTag(feed.getEntry().get(position).getImage().get(1)
+				.getLabel());
+		new MainActivity().new DownloadImage().execute(appIcon);
+
+		appPrice.setText(feed.getEntry().get(position).getPrice().getLabel());
+		appRights.setText(feed.getEntry().get(position).getRights().getLabel());
+		appReleaseDate.setText(feed.getEntry().get(position).getReleaseDate()
 				.getAttribute().getLabel());
-		appArtist.setText(obj.getEntry().get(position).getArtist().getLabel());
-		String webLink = obj.getEntry().get(position).getLink().getAttributes().getHref();
+		appArtist.setText(feed.getEntry().get(position).getArtist().getLabel());
+		String webLink = feed.getEntry().get(position).getLink()
+				.getAttributes().getHref();
 		TextView link = (TextView) findViewById(R.id.appWebLink);
 		link.setText(Html.fromHtml(webLink));
 		link.setMovementMethod(LinkMovementMethod.getInstance());
 		sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		favorites = sharedPreferences.getString(obj.getEntry().get(position)
+		favorites = sharedPreferences.getString(feed.getEntry().get(position)
 				.getTitle().getLabel().toString(), "");
 
 	}
@@ -103,8 +90,8 @@ public class Details extends Activity {
 		Intent myIntent = new Intent();
 		myIntent.setAction(Intent.ACTION_SEND);
 		String subject = "Check Out : "
-				+ obj.getEntry().get(position).getTitle().getLabel();
-		String shareMessage = obj.getEntry().get(position).getId().getLabel();
+				+ feed.getEntry().get(position).getTitle().getLabel();
+		String shareMessage = feed.getEntry().get(position).getId().getLabel();
 		myIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
 		myIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
 		myIntent.setType("text/plain");
@@ -117,9 +104,9 @@ public class Details extends Activity {
 		switch (item.getItemId()) {
 		case R.id.action_save:
 			item.setIcon(android.R.drawable.btn_star_big_on);
-			savePreferences(obj.getEntry().get(position).getTitle().getLabel()
+			savePreferences(feed.getEntry().get(position).getTitle().getLabel()
 					.toString(),
-					new Gson().toJson(obj.getEntry().get(position)));
+					new Gson().toJson(feed.getEntry().get(position)));
 			break;
 		}
 		return true;

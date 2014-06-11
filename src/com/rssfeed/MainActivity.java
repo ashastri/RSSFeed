@@ -1,10 +1,9 @@
 package com.rssfeed;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -22,7 +21,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,8 +48,6 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-		StrictMode.setThreadPolicy(policy); 
 		GetRSSFeed task = new GetRSSFeed();
 		task.execute();
 	}
@@ -78,20 +74,12 @@ public class MainActivity extends Activity {
 			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			row = inflater.inflate(R.layout.itemrow, parent, false);
 
-			TextView t = (TextView) row.findViewById(R.id.categoryId);
-			ImageView i = (ImageView) row.findViewById(R.id.img_icon);
-			t.setText(entry.get(position).getName().getLabel());
-			Bitmap bitmap = null;
-			try {
-				bitmap = BitmapFactory.decodeStream((InputStream) new URL(
-						entry.get(position).getImage().get(0).getLabel())
-						.getContent());
-			} catch (MalformedURLException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			i.setImageBitmap(bitmap);
+			TextView appName = (TextView) row.findViewById(R.id.categoryId);
+			ImageView appImage = (ImageView) row.findViewById(R.id.img_icon);
+			
+			appName.setText(entry.get(position).getName().getLabel());
+			appImage.setTag(entry.get(position).getImage().get(0).getLabel());
+			new DownloadImage().execute(appImage);
 			return row;
 
 		}
@@ -170,6 +158,37 @@ public class MainActivity extends Activity {
             dialog.setMessage("Retrieving Data...");
             dialog.show();
 		}
+	}
+	
+	public class DownloadImage extends AsyncTask<ImageView, Void, Bitmap> {
+
+	    ImageView imageView = null;
+
+	    @Override
+	    protected Bitmap doInBackground(ImageView... imageViews) {
+	        this.imageView = imageViews[0];
+	        return download_Image((String)imageView.getTag());
+	    }
+
+	    @Override
+	    protected void onPostExecute(Bitmap result) {
+	        imageView.setImageBitmap(result);
+	    }
+
+	    private Bitmap download_Image(String url) {
+
+	        Bitmap bmp =null;
+	        try{
+	            URL ulrn = new URL(url);
+	            HttpURLConnection con = (HttpURLConnection)ulrn.openConnection();
+	            InputStream is = con.getInputStream();
+	            bmp = BitmapFactory.decodeStream(is);
+	            if (null != bmp)
+	                return bmp;
+
+	            }catch(Exception e){}
+	        return bmp;
+	    }
 	}
 
 }
